@@ -32,17 +32,18 @@ class Cell(QWidget):
         p.setPen(pen)
         p.drawRect(r)
 
-        if self.is_mine:
-            p.drawPixmap(r, QPixmap(IMG_BOMB))
-        elif self.is_start:
-            p.drawPixmap(r, QPixmap(IMG_START))
-        else:
-            pen = QPen(Qt.GlobalColor.black)
-            p.setPen(pen)
-            f = p.font()
-            f.setBold(True)
-            p.setFont(f)
-            p.drawText(r, Qt.AlignmentFlag.AlignCenter, str(self.mines_around))
+        if self.is_revealed:
+            if self.is_mine:
+                p.drawPixmap(r, QPixmap(IMG_BOMB))
+            elif self.is_start:
+                p.drawPixmap(r, QPixmap(IMG_START))
+            else:
+                pen = QPen(Qt.GlobalColor.black)
+                p.setPen(pen)
+                f = p.font()
+                f.setBold(True)
+                p.setFont(f)
+                p.drawText(r, Qt.AlignmentFlag.AlignCenter, str(self.mines_around))
 
     def reset(self):
         self.is_start = False
@@ -50,6 +51,18 @@ class Cell(QWidget):
         self.mines_around = 0
         self.is_revealed = False
         self.is_flagged = False
+        self.update()
+
+    def click(self):
+        if not self.is_revealed and not self.is_flagged:
+            self.reveal()
+
+    def reveal(self):
+        if not self.is_revealed:
+            self.reveal_self()
+
+    def reveal_self(self):
+        self.is_revealed = True
         self.update()
 
 
@@ -172,7 +185,12 @@ class MainWindow(QMainWindow):
             for x, y, cell in self.get_all_cells()
             if not cell.is_mine and cell.mines_around == 0
         ]
-        random.choice(empty_cells).is_start = True
+        start_cell = random.choice(empty_cells)
+        start_cell.is_start = True
+
+        for _, _, cell in self.get_around_cells(start_cell.x, start_cell.y):
+            if not cell.is_mine:
+                cell.click()
 
 
 if __name__ == "__main__":
