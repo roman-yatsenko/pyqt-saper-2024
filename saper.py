@@ -73,6 +73,10 @@ class Cell(QWidget):
         self.is_revealed = True
         self.update()
 
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.click()
+
 
 class MainWindow(QMainWindow):
 
