@@ -11,6 +11,27 @@ IMG_BOMB = QImage("./images/bomb.png")
 IMG_CLOCK = QImage("./images/clock.png")
 
 
+class Cell(QWidget):
+
+    def __init__(self, x, y):
+        super().__init__()
+        self.setFixedSize(20, 20)
+
+        self.x = x
+        self.y = y
+
+    def paintEvent(self, event):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        r = event.rect()
+        outer, inner = Qt.GlobalColor.gray, Qt.GlobalColor.lightGray
+        p.fillRect(r, QBrush(inner))
+        pen = QPen(outer)
+        pen.setWidth(1)
+        p.setPen(pen)
+        p.drawRect(r)
+
+
 class MainWindow(QMainWindow):
 
     def __init__(self):
@@ -22,6 +43,8 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Сапер")
         self.setFixedSize(300, 300)
         self.initUI()
+        self.init_grid()
+        self.setFixedSize(self.sizeHint())
         self.show()
 
     def initUI(self):
@@ -48,7 +71,7 @@ class MainWindow(QMainWindow):
 
         l = QLabel()
         l.setPixmap(QPixmap.fromImage(IMG_BOMB))
-        l.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        l.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         toolbar.addWidget(l)
 
         toolbar.addWidget(self.mines)
@@ -57,14 +80,24 @@ class MainWindow(QMainWindow):
 
         l = QLabel()
         l.setPixmap(QPixmap.fromImage(IMG_CLOCK))
-        l.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        l.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         toolbar.addWidget(l)
 
         main_layout = QVBoxLayout()
         main_layout.addLayout(toolbar)
 
+        self.grid = QGridLayout()
+        self.grid.setSpacing(5)
+        main_layout.addLayout(self.grid)
+
         central_widget.setLayout(main_layout)
         self.setCentralWidget(central_widget)
+
+    def init_grid(self):
+        for x in range(self.board_size):
+            for y in range(self.board_size):
+                cell = Cell(x, y)
+                self.grid.addWidget(cell, x, y)
 
 
 if __name__ == "__main__":
