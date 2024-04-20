@@ -9,6 +9,7 @@ LEVELS = ((8, 10), (16, 40), (24, 99))
 
 IMG_BOMB = QImage("./images/bomb.png")
 IMG_CLOCK = QImage("./images/clock.png")
+IMG_START = QImage("./images/rocket.png")
 
 
 class Cell(QWidget):
@@ -33,6 +34,8 @@ class Cell(QWidget):
 
         if self.is_mine:
             p.drawPixmap(r, QPixmap(IMG_BOMB))
+        elif self.is_start:
+            p.drawPixmap(r, QPixmap(IMG_START))
         else:
             pen = QPen(Qt.GlobalColor.black)
             p.setPen(pen)
@@ -128,6 +131,7 @@ class MainWindow(QMainWindow):
 
         mine_positions = self.set_mines()
         self.calc_mines_around()
+        self.set_start()
 
     def get_cell(self, x, y):
         return self.grid.itemAtPosition(x, y).widget()
@@ -161,6 +165,14 @@ class MainWindow(QMainWindow):
             for yi in range(max(0, y - 1), min(y + 2, self.board_size)):
                 positions.append((xi, yi, self.get_cell(xi, yi)))
         return positions
+
+    def set_start(self):
+        empty_cells = [
+            cell
+            for x, y, cell in self.get_all_cells()
+            if not cell.is_mine and cell.mines_around == 0
+        ]
+        random.choice(empty_cells).is_start = True
 
 
 if __name__ == "__main__":
