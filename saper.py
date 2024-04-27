@@ -10,6 +10,7 @@ LEVELS = ((8, 10), (16, 40), (24, 99))
 IMG_BOMB = QImage("./images/bomb.png")
 IMG_CLOCK = QImage("./images/clock.png")
 IMG_START = QImage("./images/rocket.png")
+IMG_FLAG = QImage("./images/flag.png")
 
 STATUS_READY = 0
 STATUS_PLAY = 1
@@ -66,6 +67,8 @@ class Cell(QWidget):
                 f.setBold(True)
                 p.setFont(f)
                 p.drawText(r, Qt.AlignmentFlag.AlignCenter, str(self.mines_around))
+        elif self.is_flagged:
+            p.drawPixmap(r, QPixmap(IMG_FLAG))
 
     def reset(self):
         self.is_start = False
@@ -97,6 +100,13 @@ class Cell(QWidget):
         self.clicked.emit()
         if event.button() == Qt.MouseButton.LeftButton:
             self.click()
+        elif event.button() == Qt.MouseButton.RightButton:
+            if not self.is_revealed:
+                self.toggle_flag()
+
+    def toggle_flag(self):
+        self.is_flagged = not self.is_flagged
+        self.update()
 
 
 class MainWindow(QMainWindow):
