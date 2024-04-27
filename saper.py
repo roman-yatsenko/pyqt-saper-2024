@@ -274,6 +274,12 @@ class MainWindow(QMainWindow):
 
     def game_over(self):
         self.update_status(STATUS_FAILED)
+        self.reveal_grid()
+
+    def reveal_grid(self):
+        for _, _, cell in self.get_all_cells():
+            if not (cell.is_flagged and cell.is_mine):
+                cell.reveal_self()
 
     def handle_flag(self, flagged):
         self.mines_count += -1 if flagged else 1
