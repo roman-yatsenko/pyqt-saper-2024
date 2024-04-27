@@ -30,6 +30,7 @@ class Cell(QWidget):
     expandable = pyqtSignal(int, int)
     clicked = pyqtSignal()
     flagged = pyqtSignal(bool)
+    chorded = pyqtSignal(int, int)
     game_over = pyqtSignal()
 
     def __init__(self, x, y):
@@ -105,6 +106,8 @@ class Cell(QWidget):
         elif event.button() == Qt.MouseButton.RightButton:
             if not self.is_revealed:
                 self.toggle_flag()
+            else:
+                self.chorded.emit(self.x, self.y)
         self.clicked.emit()
 
     def toggle_flag(self):
@@ -188,6 +191,7 @@ class MainWindow(QMainWindow):
                 cell.expandable.connect(self.expand_reveal)
                 cell.clicked.connect(self.handle_click)
                 cell.flagged.connect(self.handle_flag)
+                cell.chorded.connect(self.handle_chord)
                 cell.game_over.connect(self.game_over)
 
     def reset(self):
@@ -252,9 +256,13 @@ class MainWindow(QMainWindow):
         for _, _, cell in self.get_revealable_cells(x, y):
             cell.reveal()
 
-    def get_revealable_cells(self, x, y):
+    def get_revealable_cells(self, x, y, force=False):
         for xi, yi, cell in self.get_around_cells(x, y):
-            if not cell.is_mine and not cell.is_flagged and not cell.is_revealed:
+            if (
+                (force or not cell.is_mine)
+                and not cell.is_flagged
+                and not cell.is_revealed
+            ):
                 yield (xi, yi, cell)
 
     def update_status(self, status):
@@ -316,6 +324,23 @@ class MainWindow(QMainWindow):
         elif self.status in (STATUS_FAILED, STATUS_SUCCESS):
             self.update_status(STATUS_READY)
             self.reset()
+
+    def handle_chord(self, x, y):
+        to_reveal = []
+        self.determine_to_safe_reveal(x, y, to_reveal)
+        for _, _, cell in to_reveal:
+            cell.reveal()
+
+    def determine_to_safe_reveal(self, x, y, to_reveal):
+        flagged_count = sum(
+            int(cell.is_flagged) for _, _, cell in self.get_around_cells(x, y)
+        )
+        base_cell = self.get_cell(x, y)
+        if flagged_count == base_cell.mines_around:
+            for xi, yi, cell in self.get_revealable_cells(x, y, True):
+                if (xi, yi) not in ((xq, yq) for xq, yq, _ in to_reveal):
+                    to_reveal.append((xi, yi, cell))
+                    self.determine_to_safe_reveal(xi, yi, to_reveal)
 
 
 if __name__ == "__main__":
