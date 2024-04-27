@@ -154,6 +154,7 @@ class MainWindow(QMainWindow):
         self.button.setIconSize(QSize(32, 32))
         self.button.setIcon(QIcon("./images/smiley.png"))
         self.button.setFlat(True)
+        self.button.pressed.connect(self.button_pressed)
 
         l = QLabel()
         l.setPixmap(QPixmap.fromImage(IMG_BOMB))
@@ -307,6 +308,14 @@ class MainWindow(QMainWindow):
                     for cell in unrevealed:
                         cell.toggle_flag()
                     self.update_status(STATUS_SUCCESS)
+
+    def button_pressed(self):
+        if self.status == STATUS_PLAY:
+            self.update_status(STATUS_FAILED)
+            self.reveal_grid()
+        elif self.status in (STATUS_FAILED, STATUS_SUCCESS):
+            self.update_status(STATUS_READY)
+            self.reset()
 
 
 if __name__ == "__main__":
